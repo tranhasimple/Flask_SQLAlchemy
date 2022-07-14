@@ -65,7 +65,20 @@ def login_func():
         return jsonify({'Error': "{}".format(e)}), 500
 
 
-@auth_router.route('/api/me', methods=['GET'])
+@auth_router.route('/api/me', methods=['GET', 'PUT'])
 @token_required
 def get_user(current_user):
-    return jsonify({'users': current_user.toDict()})
+    if request.method == 'GET':
+        return jsonify({'users': current_user.toDict()})
+    elif request.method == 'PUT':
+        if request.form['username']:
+            return jsonify({
+                "msg": "Cannot change username"
+            }), 400
+        elif request.form['password']:
+            password = request.form['password']
+            password = generate_password_hash(password)
+            print(password)
+            current_user.password = password
+            db.session.commit()
+        return jsonify({'users': current_user.toDict()})

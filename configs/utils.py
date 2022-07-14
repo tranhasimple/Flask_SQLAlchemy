@@ -3,7 +3,7 @@ import jwt
 from functools import wraps
 from model import User
 from config import SECRET_KEY
-
+from configs.constants import ALLOWED_EXTENSIONS
 
 def token_required(f):
     @wraps(f)
@@ -29,3 +29,6 @@ def token_required(f):
         return f(current_user, *args, **kwargs)
 
     return decorated
+
+def allowed_filename(filename):
+    return '.' in filename and filename.rsplit('.',1)[1] in ALLOWED_EXTENSIONS
