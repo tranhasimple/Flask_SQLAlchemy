@@ -14,6 +14,7 @@ class Accelerometer(db.Model):
     y = db.Column(db.Float)
     z = db.Column(db.Float)
     timestamp = db.Column(db.DateTime)
+    user_id = db.Column(db.Integer)
 
     def __repr__(self) -> str:
         return f"<date> {self.timestamp}" 
@@ -25,6 +26,7 @@ class ResponseData(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     steps = db.Column(db.Integer)
     timestamp = db.Column(db.DateTime)
+    user_id = db.Column(db.Integer)
 
     def toDict(self):
         return { c.key: getattr(self, c.key) for c in inspect(self).mapper.column_attrs }

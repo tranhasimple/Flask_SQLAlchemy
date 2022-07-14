@@ -33,9 +33,11 @@ def register_func():
             return make_response('User already exists. Please Log in.', 202)
 
     except Exception as e:
-        return jsonify({"error": "Exception: {}".format(e)}), 400
+        return jsonify({"error": "Exception: {}".format(e)}), 500
 
 
+# get username and password from user -> call to db and filter and check username
+# - if username is valid --> check code_hash --> duration 10000 minutes
 @auth_router.route('/api/login', methods=["POST"])
 def login_func():
     try:
