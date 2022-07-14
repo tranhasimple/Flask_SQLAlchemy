@@ -39,7 +39,9 @@ def accelerometer_handler(current_user):
                     x = Decimal(arr[0])
                     y = Decimal(arr[1])
                     z = Decimal(arr[2])
-                    timestamp = datetime.strptime(arr[3].strip(), "%Y-%m-%d")
+                    time_string = arr[3].strip().replace("T", " ")
+                    
+                    timestamp = datetime.strptime(time_string, "%Y-%m-%d %H:%M:%S")
                     acc = Accelerometer(
                         x=x, y=y, z=z, timestamp=timestamp, id_user=current_user.id)
                     db.session.add(acc)
@@ -53,9 +55,9 @@ def accelerometer_handler(current_user):
         return jsonify(res), 200
     elif request.method == 'GET':
         try:
-            data = Accelerometer.query(sa.func.group_concat(Accelerometer.id)).filter(
-                Accelerometer.id_user == current_user.id).group_by(sa.func.month(Accelerometer.timestamp)).all()
-            print(data)
+            data = Accelerometer.query.filter(
+                Accelerometer.id_user == current_user.id).group_by(func.date_format(Accelerometer.timestamp, '%Y-%m-%d %H')).all()
+
             res = []
             for acc in data:
                 res.append(acc.toDict())
