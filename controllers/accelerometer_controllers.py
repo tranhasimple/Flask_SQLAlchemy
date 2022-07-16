@@ -43,7 +43,7 @@ def accelerometer_handler(current_user):
                     
                     timestamp = datetime.strptime(time_string, "%Y-%m-%d %H:%M:%S")
                     acc = Accelerometer(
-                        x=x, y=y, z=z, timestamp=timestamp, id_user=current_user.id)
+                        x=x, y=y, z=z, timestamp=timestamp, user_id=current_user.id)
                     db.session.add(acc)
                     db.session.commit()
 
@@ -56,7 +56,7 @@ def accelerometer_handler(current_user):
     elif request.method == 'GET':
         try:
             data = Accelerometer.query.filter(
-                Accelerometer.id_user == current_user.id).group_by(func.date_format(Accelerometer.timestamp, '%Y-%m-%d %H')).all()
+                Accelerometer.user_id == current_user.id).group_by(func.date_format(Accelerometer.timestamp, '%H')).all()
 
             res = []
             for acc in data:

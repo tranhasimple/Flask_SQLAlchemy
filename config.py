@@ -5,9 +5,9 @@ SECRET_KEY = 'HA_ACCELEROMETER'
 APP_HOST = '0.0.0.0'
 APP_PORT = 8080
 APP_SELF_REF = 'accelerometer'
-# SQLALCHEMY_DATABASE_URI = 'mysql://root:Long.0311@127.0.0.1:3306/acc_data'
+SQLALCHEMY_DATABASE_URI = 'mysql://root:Long.0311@127.0.0.1:3306/acc_data'
 
-SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:Long.121100@localhost:3306/ha'
+# SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:Long.121100@localhost:3306/ha'
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 API_URI = f'http://{APP_HOST}:{APP_PORT}'
 URL = f'http://{APP_HOST}:{APP_PORT}'

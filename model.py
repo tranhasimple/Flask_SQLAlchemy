@@ -14,12 +14,9 @@ class Accelerometer(db.Model):
     y = db.Column(db.Float)
     z = db.Column(db.Float)
     timestamp = db.Column(db.DateTime)
-<<<<<<< HEAD
-    user_id = db.Column(db.Integer)
-=======
+
     FK_acc_user = db.relationship("User", backref=db.backref("accelerometers", uselist=False), lazy=True)
-    id_user = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
->>>>>>> 5f8d6d2cfd76d978c1ce5166af02e2569ac640bb
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
 
     def __repr__(self) -> str:
         return f"<date> {self.timestamp}"
@@ -34,12 +31,9 @@ class ResponseData(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     steps = db.Column(db.Integer)
     timestamp = db.Column(db.DateTime)
-<<<<<<< HEAD
-    user_id = db.Column(db.Integer)
-=======
+
     FK_response_user = db.relationship("User", backref=db.backref("response_datas", uselist=False), lazy=True)
-    id_user = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
->>>>>>> 5f8d6d2cfd76d978c1ce5166af02e2569ac640bb
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
 
     def toDict(self):
         return {c.key: getattr(self, c.key) for c in inspect(self).mapper.column_attrs}
