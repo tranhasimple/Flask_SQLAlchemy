@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, date
 from decimal import Decimal
 import os
 import time
@@ -37,12 +37,26 @@ def response_handler(current_user):
         return jsonify(res), 200
     elif request.method == 'GET':
         try:
-            data = Accelerometer.query.filter(
-                Accelerometer.id_user == current_user.id).group_by(func.date_format(Accelerometer.timestamp, '%Y-%m-%d %H')).all()
+            query_date = request.args.get('date')
+            if query_date == None:
+                return jsonify({
+                    "msg": "No date found"
+                }), 404
+            query_date = datetime. strptime(query_date, '%Y-%m-%d')
+            query_date = date(int(query_date.year), int(
+                query_date.month), int(query_date.day))
+
+            data = ResponseData.query.all()
 
             res = []
             for acc in data:
-                res.append(acc.toDict())
+                ts = acc.timestamp
+                if query_date.year == ts.year and query_date.month == ts.month and query_date.day == ts.day:
+                    res.append({
+                        "steps": acc.steps,
+                        "hour": ts.hour,
+                        "timestamp": ts
+                    })
         except Exception as e:
             return jsonify({"error": "Exception: {}".format(e)}), 400
         return jsonify(res), 200
