@@ -12,11 +12,14 @@ auth_router = Blueprint('auth_router', __name__)
 @auth_router.route('/api/register', methods=["POST"])
 def register_func():
     try:
-        username = request.form['username']
-        password = request.form['password']
+        data = request.json['user_data']
+
+
+        username = data['username']
+        password = data['password']
         password = generate_password_hash(password)
-        gender = request.form['gender']
-        birthday = request.form['birthday']
+        gender = data['gender']
+        birthday = data['birthday']
 
         user = User.query\
             .filter_by(username=username)\
@@ -41,8 +44,11 @@ def register_func():
 @auth_router.route('/api/login', methods=["POST"])
 def login_func():
     try:
-        username = request.form['username']
-        password = request.form['password']
+        data = request.json['user_data']
+
+
+        username = data['userName']
+        password = data['password']
 
         user = User.query.filter_by(username=username).first()
         if not user:
@@ -56,7 +62,9 @@ def login_func():
                 'username': user.username,
                 'exp': datetime.utcnow() + timedelta(minutes=10000)
             }, SECRET_KEY)
-            return make_response(jsonify({'token': token.decode('UTF-8'), 'user': user.toDict()}), 201)
+
+            print(jsonify({'token': token.decode('UTF-8'), 'username': user.username, "birthday": user.birthday}))
+            return make_response(jsonify({'token': token.decode('UTF-8'), 'username': user.username, "birthday": user.birthday}), 201)
         else:
             return jsonify({
                 "msg": "Something went wrong"

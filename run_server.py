@@ -10,6 +10,7 @@ from model import Accelerometer
 
 from controllers.user_controllers import auth_router
 from controllers.accelerometer_controllers import accelerometer_router
+from controllers.response_data_controller import response_router
 
 app = Flask(__name__)
 
@@ -21,6 +22,7 @@ api = Api(app)
 
 app.register_blueprint(auth_router)
 app.register_blueprint(accelerometer_router)
+app.register_blueprint(response_router)
 # @app.route('/', methods=['GET'])
 # def get():
 #     try:
