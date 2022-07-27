@@ -26,7 +26,7 @@ def response_handler(current_user):
             id_user = current_user.id
 
             response_data = ResponseData(
-                steps=steps, timestamp=timestamp, id_user=id_user)
+                steps=steps, timestamp=timestamp, user_id=id_user)
             db.session.add(response_data)
             db.session.commit()
             res = {
@@ -49,15 +49,17 @@ def response_handler(current_user):
 
             data = ResponseData.query.all()
 
-            res = []
+            res = 0
             for acc in data:
                 ts = acc.timestamp
                 if query_date.year == ts.year and query_date.month == ts.month and query_date.day == ts.day:
-                    res.append({
-                        "steps": acc.steps,
-                        "hour": ts.hour,
-                        "timestamp": ts
-                    })
+                    res += acc.steps
+                    
+                    # res.append({
+                    #     "steps": acc.steps,
+                    #     "hour": ts.hour,
+                    #     "timestamp": ts
+                    # })
         except Exception as e:
             return jsonify({"error": "Exception: {}".format(e)}), 400
         return jsonify(res), 200

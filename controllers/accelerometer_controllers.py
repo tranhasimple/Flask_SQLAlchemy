@@ -1,8 +1,12 @@
+from asyncio import FastChildWatcher
 from datetime import datetime, timedelta
 from decimal import Decimal
 import os
+import numpy as np
+
 import time
 import pandas as pd
+import glob
 from flask_cors import CORS
 from flask import Flask, render_template, url_for, request, redirect, session, jsonify, send_file, Blueprint, make_response
 from werkzeug.utils import secure_filename
@@ -16,12 +20,12 @@ import sqlalchemy as sa
 import csv
 
 accelerometer_router = Blueprint('accelerometer_router', __name__)
+HOME = "upload/by_hour/"
 
 iter = 0
 global_data = []
 @accelerometer_router.route('/api/accelerometer', methods=['GET', 'POST'])
 @token_required 
-#nhung gửi lên không thôi à, gửi 
 def accelerometer_handler(current_user):
     global iter
     global global_data
@@ -31,31 +35,93 @@ def accelerometer_handler(current_user):
             
             iter += 1
             datas = request.json['data']
-            # x = []
-            # y = []
-            # z = []
-            # for item in datas:
-            #     x.append(item['x'])
-            #     y.append(item['y'])
-            #     z.append(item['z'])
-            print(datas)
-            timestamp = []
-        data_ = []
 
-        for item in datas:
-            data_.append([item['timestamp'],item['x'], item['y'], item['z']])
+            # print(datas)
+            data_ = []
+            hour = ""
+            current_hour = ""
 
-        print(len(global_data))
-        global_data.append(data_)
+            for item in datas:
+                data_.append([item['timestamp'],item['x'], item['y'], item['z']])
+
+            # list all files in upload/by_hour
+            # get lastest file => extract file_name
+            # compare
+            #glob
+
+            # path of the directory
+            path = "upload/by_hour"
+            
+            # Getting the list of directories
+            dir = os.listdir(path)
+            
+            # Checking if the list is empty or not
+            if len(dir) != 0:
+        
+                list_of_files = glob.glob('upload/by_hour/*') # * means all if need specific format then *.csv
+                latest_file = max(list_of_files, key=os.path.getctime)
+                print(type(latest_file))
+
+                now = datetime.now()
+                current_time = now.strftime("%y-%M-%d-%H_%M")
+
+                print("current time: ", current_time)
+                latest_hour = latest_file.split(".csv")[0].split(HOME)[1] 
+
+                if latest_hour != current_time:
+                    timestamp, x, y, z = np.genfromtxt(str(latest_file), delimiter=";", dtype='str',unpack=True)
+                    x_d = x[1:]
+                    y_d = y[1:]
+                    z_d = z[1:]
+                    x = np.array([float(item) for item in x_d])
+                    y = np.array([float(item) for item in y_d])
+                    z = np.array([float(item) for item in z_d])
+
+                    value = x.shape[0]
+                    id_user = current_user.id
+
+                    print(value)
+                    
+                    print(latest_hour)
+
+                    response_data = ResponseData(steps=value, timestamp=latest_hour, user_id=id_user)
+                    db.session.add(response_data)
+                    db.session.commit()
+
+
+                
+            if(len(data_) > 0):
+                filename = data_[0]
+                hour = filename[0].split(":")[0] + "_" + filename[0].split(":")[1]
+                # print("Type hour: ", type(hour))
+                formated_hour = hour.replace(" ", "-")
+
+                # print("formated hour: ",formated_hour)
+                dir = os.path.join(HOME, formated_hour + ".csv")
+
+                file_object = open(dir, 'a')
+                for item in data_:
+                    text = item[0] + ";" + str(item[1]) + ";" + str(item[2]) + ";" + str(item[3]) + "\n"
+                    file_object.write(text) 
+                file_object.close() 
+
+
+
+            
+            # print(hour)
+
+
+        #     print(len(data_))
+        # global_data.append(data_)
         # data_ = []
     
 
-        if(len(global_data) == 4):
-            iter += 1
-            process_data(global_data, iter)
-            global_data = []
+        # if(len(global_data) == 4):
+        #     iter += 1
+        #     process_data(global_data, iter)
+        #     global_data = []
     
-    return str(iter)
+        return str(iter)
 
 def process_data(data, iter):
     lst = []
@@ -67,6 +133,7 @@ def process_data(data, iter):
     now = datetime.now()
     current_time = now.strftime("%H:%M:%S")
     df.to_csv("/home/hatran_ame/DB_PY/Flask_SQLAlchemy/upload/by_hour/" + str(current_time) + ".csv", sep=";",index=False)
+    
     # return(str(iter))
 
             # submitted_file = request.files['file']
