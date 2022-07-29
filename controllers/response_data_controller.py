@@ -47,19 +47,26 @@ def response_handler(current_user):
             query_date = date(int(query_date.year), int(
                 query_date.month), int(query_date.day))
 
-            data = ResponseData.query.all()
+            data = ResponseData.query.filter(ResponseData.user_id==current_user.id).all()
 
             res = 0
+            step_arr = [0] * 24
+
             for acc in data:
+                print(acc)
                 ts = acc.timestamp
+                h = ts.hour
+                print("h:", h)
+
                 if query_date.year == ts.year and query_date.month == ts.month and query_date.day == ts.day:
                     res += acc.steps
-                    
-                    # res.append({
-                    #     "steps": acc.steps,
-                    #     "hour": ts.hour,
-                    #     "timestamp": ts
-                    # })
+                    step_arr[int(h)] = acc.steps
+
+            print("steps: ", step_arr)
+        
         except Exception as e:
             return jsonify({"error": "Exception: {}".format(e)}), 400
-        return jsonify(res), 200
+        return jsonify({
+            "steps": res,
+            "step_arr": step_arr
+        }), 200

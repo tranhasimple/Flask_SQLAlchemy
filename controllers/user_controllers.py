@@ -60,7 +60,7 @@ def login_func():
         if check_password_hash(user.password, password):
             token = jwt.encode({
                 'username': user.username,
-                'exp': datetime.utcnow() + timedelta(minutes=10000)
+                'exp': datetime.utcnow() + timedelta(minutes=100000)
             }, SECRET_KEY)
 
             print(jsonify({'token': token.decode('UTF-8'), 'username': user.username, "birthday": user.birthday}))
@@ -71,7 +71,6 @@ def login_func():
             }), 400
     except Exception as e:
         return jsonify({'Error': "{}".format(e)}), 500
-
 
 @auth_router.route('/api/me', methods=['GET', 'PUT'])
 @token_required
