@@ -38,6 +38,12 @@ def accelerometer_handler(current_user):
         if request.is_json:
             # iter += 1
             datas = request.json['data']
+            ############## EDIT HERE BY HA 30/7 -- START
+            sign = convert_data(datas)
+
+            predict(sign)
+
+            ####### EDIT BY HA 30/7 ---- STOP
 
             # print(datas)
             data_ = []
@@ -71,15 +77,12 @@ def accelerometer_handler(current_user):
                 latest_hour = latest_info.split("_")[0]
                 print(latest_hour)
                 id_user = current_user.id
-                
 
-############################HERE=============================================
-                if latest_file != str(current_time) + "_" + str(id_user):
+                if latest_info != str(current_time) + "_" + str(id_user):
+
                     data = ResponseData.query.filter(ResponseData.user_id==current_user.id).all()
                     print("latest_info", latest_info)
                     print("current time", str(current_time) + "_" + str(id_user))
-
-
                     print("check: ", latest_info == str(current_time) +"_"+  str(id_user))
                     check = False
                     for i in data:
@@ -88,6 +91,7 @@ def accelerometer_handler(current_user):
                             check = True
                             break
                     if(check == False):
+                        
                         timestamp, x, y, z = np.genfromtxt(str(latest_file), delimiter=";", dtype='str',unpack=True)
                         x_d = x[1:]
                         y_d = y[1:]
@@ -110,7 +114,8 @@ def accelerometer_handler(current_user):
             print("[Run here]")
             if(len(data_) > 0):
                 filename = data_[0]
-                hour = filename[0].split(":")[0]
+                # fix here
+                hour = filename[0].split(":")[0] + "_" + filename[0].split(":")[1]
                 print("hour ", hour)
                 # print("Type hour: ", type(hour))
                 formated_file = hour.replace(" ", "-") + "_" + str(id_user)
@@ -137,3 +142,11 @@ def accelerometer_handler(current_user):
 #     current_time = now.strftime("%H:%M:%S")
 #     df.to_csv("/home/hatran_ame/DB_PY/Flask_SQLAlchemy/upload/by_hour/" + str(current_time) + ".csv", sep=";",index=False)
     
+def convert_data(data: list) -> list:
+    lst = []
+    # for i, e in enumerate(data):
+    #     lst.append([data[i]['x'], data[i]['y'], data[i]['z']])
+    for item in data:
+        lst.append([item['x'], item['y'], item['z']])
+    lst = np.array(lst)
+    return lst

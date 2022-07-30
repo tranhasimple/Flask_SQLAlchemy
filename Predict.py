@@ -57,16 +57,24 @@ class Signal_new:
         self.z_f = None
     
 
-    def set_signal(self, path, isFilter=True, cutoff=5.0, order=5, fs=100):
-        timestamp, x, y, z = np.genfromtxt(str(path), delimiter=";", dtype='str',unpack=True)
+    def set_signal(self, signal, isFilter=True, cutoff=5.0, order=5, fs=100):
+        # timestamp, x, y, z = np.genfromtxt(str(path), delimiter=";", dtype='str',unpack=True)
     
-        self.x = np.array([float(item) for item in x])
-        self.y = np.array([float(item) for item in y])
-        self.z = np.array([float(item) for item in z])
+        # FOR DATA FROM ANDROID LOADED FILE
+        # self.x = np.array([float(item) for item in x])
+        # self.y = np.array([float(item) for item in y])
+        # self.z = np.array([float(item) for item in z])
+
+        # FOR DATAS FROM IPHONE
         # _,x,y,z = 10*np.loadtxt(path, delimiter=";", skiprows=1, unpack=True)
         # self.x = np.array(x)
         # self.y = np.array(y)
         # self.z = np.array(z)
+
+        self.x = np.array([item[0] for item in signal])
+        self.y = np.array([item[1] for item in signal])
+        self.z = np.array([item[2] for item in signal])
+
 
         self.a = np.sqrt(self.x*self.x + self.y*self.y + self.z*self.z)
         if isFilter:
