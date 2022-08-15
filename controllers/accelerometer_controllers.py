@@ -38,98 +38,142 @@ def accelerometer_handler(current_user):
         if request.is_json:
             # iter += 1
             datas = request.json['data']
-            ############## EDIT HERE BY HA 30/7 -- START
             sign = convert_data(datas)
+            now = datetime.now()
+            # current_time = now.strftime("%Y-%m-%d-%H")
 
-            predict(sign)
+# HERE=============================================
 
-            ####### EDIT BY HA 30/7 ---- STOP
+            data = ResponseData.query.filter(
+                ResponseData.user_id == current_user.id).all()
 
-            # print(datas)
-            data_ = []
-            hour = ""
-            current_hour = ""
+            steps = predict(sign)
 
-            for item in datas:
-                data_.append([item['timestamp'],item['x'], item['y'], item['z']])
+            resp = None
+            for item in data:
+                ts = item.timestamp
+                if now.year == ts.year and now.month == ts.month and now.day == ts.day and now.hour == ts.hour:
+                    resp = item
+                    break
 
-            # list all files in upload/by_hour
-            # get lastest file => extract file_name
-            # compare
-            # glob
+            if resp == None:
+                response_data = ResponseData(
+                    steps=steps, timestamp=now, user_id=current_user.id)
+                db.session.add(response_data)
+                db.session.commit()
+            else:
+                resp.steps += steps
+                db.session.commit()
 
-            # path of the directory
-            path = "upload/by_hour"
+            data = ResponseData.query.filter(
+                ResponseData.user_id == current_user.id).all()
+
+            res = 0
+
+            for acc in data:
+                ts = acc.timestamp
+
+                if now.year == ts.year and now.month == ts.month and now.day == ts.day:
+                    res += acc.steps
+
+    return jsonify({
+        "steps": steps,
+        "total": res
+    }), 200
+
+
+        #     ############## EDIT HERE BY HA 30/7 -- START
+        #     sign = convert_data(datas)
+
+        #     predict(sign)
+
+        #     ####### EDIT BY HA 30/7 ---- STOP
+
+        #     # print(datas)
+        #     data_ = []
+        #     hour = ""
+        #     current_hour = ""
+
+        #     for item in datas:
+        #         data_.append([item['timestamp'],item['x'], item['y'], item['z']])
+
+        #     # list all files in upload/by_hour
+        #     # get lastest file => extract file_name
+        #     # compare
+        #     # glob
+
+        #     # path of the directory
+        #     path = "upload/by_hour"
             
-            # Getting the list of directories
-            dir = os.listdir(path)
+        #     # Getting the list of directories
+        #     dir = os.listdir(path)
             
-            # Checking if the list is empty or not
-            if len(dir) != 0:
+        #     # Checking if the list is empty or not
+        #     if len(dir) != 0:
         
-                list_of_files = glob.glob('upload/by_hour/*') # * means all if need specific format then *.csv
-                latest_file = max(list_of_files, key=os.path.getctime)
+        #         list_of_files = glob.glob('upload/by_hour/*') # * means all if need specific format then *.csv
+        #         latest_file = max(list_of_files, key=os.path.getctime)
 
-                now = datetime.now()
-                current_time = now.strftime("%Y-%m-%d-%H")
+        #         now = datetime.now()
+        #         current_time = now.strftime("%Y-%m-%d-%H")
 
-                latest_info = latest_file.split(".csv")[0].split(HOME)[1] 
-                latest_hour = latest_info.split("_")[0]
-                print(latest_hour)
-                id_user = current_user.id
+        #         latest_info = latest_file.split(".csv")[0].split(HOME)[1] 
+        #         latest_hour = latest_info.split("_")[0]
+        #         print(latest_hour)
+        #         id_user = current_user.id
 
-                if latest_info != str(current_time) + "_" + str(id_user):
+        #         if latest_info != str(current_time) + "_" + str(id_user):
 
-                    data = ResponseData.query.filter(ResponseData.user_id==current_user.id).all()
-                    print("latest_info", latest_info)
-                    print("current time", str(current_time) + "_" + str(id_user))
-                    print("check: ", latest_info == str(current_time) +"_"+  str(id_user))
-                    check = False
-                    for i in data:
-                        temp = str(i.timestamp).split(":")[0]
-                        if(temp == latest_hour):
-                            check = True
-                            break
-                    if(check == False):
+        #             data = ResponseData.query.filter(ResponseData.user_id==current_user.id).all()
+        #             print("latest_info", latest_info)
+        #             print("current time", str(current_time) + "_" + str(id_user))
+        #             print("check: ", latest_info == str(current_time) +"_"+  str(id_user))
+        #             check = False
+        #             for i in data:
+        #                 temp = str(i.timestamp).split(":")[0]
+        #                 if(temp == latest_hour):
+        #                     check = True
+        #                     break
+        #             if(check == False):
                         
-                        timestamp, x, y, z = np.genfromtxt(str(latest_file), delimiter=";", dtype='str',unpack=True)
-                        x_d = x[1:]
-                        y_d = y[1:]
-                        z_d = z[1:]
-                        x = np.array([float(item) for item in x_d])
-                        y = np.array([float(item) for item in y_d])
-                        z = np.array([float(item) for item in z_d])
+        #                 timestamp, x, y, z = np.genfromtxt(str(latest_file), delimiter=";", dtype='str',unpack=True)
+        #                 x_d = x[1:]
+        #                 y_d = y[1:]
+        #                 z_d = z[1:]
+        #                 x = np.array([float(item) for item in x_d])
+        #                 y = np.array([float(item) for item in y_d])
+        #                 z = np.array([float(item) for item in z_d])
 
-                        value = x.shape[0]
+        #                 value = x.shape[0]
 
-                        steps = predict(latest_file)
+        #                 steps = predict(latest_file)
 
-                        print("step: ", steps)
+        #                 print("step: ", steps)
 
-                        response_data = ResponseData(steps=steps, timestamp=latest_hour, user_id=id_user)
-                        db.session.add(response_data)
-                        db.session.commit()
+        #                 response_data = ResponseData(steps=steps, timestamp=latest_hour, user_id=id_user)
+        #                 db.session.add(response_data)
+        #                 db.session.commit()
 
 
-            print("[Run here]")
-            if(len(data_) > 0):
-                filename = data_[0]
-                # fix here
-                hour = filename[0].split(":")[0] + "_" + filename[0].split(":")[1]
-                print("hour ", hour)
-                # print("Type hour: ", type(hour))
-                formated_file = hour.replace(" ", "-") + "_" + str(id_user)
+        #     print("[Run here]")
+        #     if(len(data_) > 0):
+        #         filename = data_[0]
+        #         # fix here
+        #         hour = filename[0].split(":")[0] + "_" + filename[0].split(":")[1]
+        #         print("hour ", hour)
+        #         # print("Type hour: ", type(hour))
+        #         formated_file = hour.replace(" ", "-") + "_" + str(id_user)
 
-                # print("formated hour: ",formated_hour)
-                dir = os.path.join(HOME, formated_file + ".csv")
+        #         # print("formated hour: ",formated_hour)
+        #         dir = os.path.join(HOME, formated_file + ".csv")
 
-                file_object = open(dir, 'a')
-                for item in data_:
-                    text = item[0] + ";" + str(item[1]) + ";" + str(item[2]) + ";" + str(item[3]) + "\n"
-                    file_object.write(text) 
-                file_object.close() 
+        #         file_object = open(dir, 'a')
+        #         for item in data_:
+        #             text = item[0] + ";" + str(item[1]) + ";" + str(item[2]) + ";" + str(item[3]) + "\n"
+        #             file_object.write(text) 
+        #         file_object.close() 
     
-        return str("Uploadeds")
+        # return str("Uploadeds")
 
 # def process_data(data, iter):
 #     lst = []

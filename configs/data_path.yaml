@@ -1,0 +1,6 @@
+processed_data:
+  data_30_7:
+    data: processed_data/data_30_7/data.npz
+    model: processed_data/data_30_7/svm4.model
+    scaler: processed_data/data_30_7/scaler.sav
+  

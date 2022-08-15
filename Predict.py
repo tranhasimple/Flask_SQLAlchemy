@@ -33,7 +33,16 @@ matplotlib.rc('xtick', labelsize=15)
 matplotlib.rc('ytick', labelsize=15)
 plt.rc('axes', labelsize=15)
 plt.rc('legend', fontsize=15, loc='lower right')
-# plt.rc('lines', linewidth=1)
+import hydra
+from hydra import utils
+import numpy as np
+from hydra import initialize, initialize_config_module, initialize_config_dir, compose
+from omegaconf import OmegaConf
+import os
+
+with initialize(config_path="configs"):
+    data_cfg = compose(config_name="data_path")
+data_cfg = OmegaConf.create(data_cfg)
 
 
 class Signal_new:
@@ -58,9 +67,8 @@ class Signal_new:
     
 
     def set_signal(self, signal, isFilter=True, cutoff=5.0, order=5, fs=100):
-        # timestamp, x, y, z = np.genfromtxt(str(path), delimiter=";", dtype='str',unpack=True)
-    
         # FOR DATA FROM ANDROID LOADED FILE
+        # timestamp, x, y, z = np.genfromtxt(str(path), delimiter=";", dtype='str',unpack=True)
         # self.x = np.array([float(item) for item in x])
         # self.y = np.array([float(item) for item in y])
         # self.z = np.array([float(item) for item in z])
@@ -80,7 +88,7 @@ class Signal_new:
         if isFilter:
             self.low_pass_filter(cutoff=cutoff, order=order)
 
-    def butter_lowpass(self, cutoff, order):
+    def butter(self, cutoff, order):
         f_nyq = 0.5 * self.fs
         f_normal = cutoff / f_nyq
         numerator, denominator = butter(
@@ -88,7 +96,7 @@ class Signal_new:
         return numerator, denominator
 
     def butter_lowpass_filter(self, data, cutoff=5.0, order=5):
-        b, a = self.butter_lowpass(cutoff, order=order)
+        b, a = self.butter(cutoff, order=order)
         y = filtfilt(b, a, data)
         return y
 
@@ -108,21 +116,21 @@ class Signal_new:
         list_index = []
         peaks, _ = find_peaks(sig_pulse)
         for idx, peak in enumerate(peaks):
-            indexs = []
+            indices = []
             for i, e in enumerate(reversed(range(0, peak, 1))):
 
                 if sig_pulse[e] == 0:
                     break
-                indexs.append(e)
-            # indexs                                                                                                                                                                               = indexs[::-1]
-            indexs.reverse()
+                indices.append(e)
+            # indices                                                                                                                                                                           = indices[::-1]
+            indices.reverse()
             for i, e in enumerate(range(peak, len(sig_pulse), 1)):
 
                 if sig_pulse[e] == 0:
                     break
-                indexs.append(e)
-            if len(indexs) > num_thr:
-                list_index.append(indexs)
+                indices.append(e)
+            if len(indices) > num_thr:
+                list_index.append(indices)
             else:
                 peaks = np.delete(peaks, i)
         return list_index
@@ -152,7 +160,6 @@ class Signal_new:
             index_peaks.append(list_indexs[i][idx])
 
         self.all_index_peaks = np.array(index_peaks)
-        # chỗ này chưa trả về mà ở dưới gọi nhá
         return self.all_index_peaks
 
 
@@ -327,14 +334,13 @@ class StepPredict:
         y_predicts = []
         y_window = []
         pre_peak = 0
-        distain_peak = 10000000
+        distance_peak = 10000000
         T_thr1 = 32
         T_thr2 = 21
 
         for peak in peaks:
             num_size = pre_window
             data_point = signal.get_data_point(peak, num_size)
-            # print(data_point.shape)
             y_pre = self.predict_peak(data_point)
             if y_pre == 0:
                 for size in self.window_size:
@@ -344,19 +350,19 @@ class StepPredict:
                         if y_pre != 0:
                             pre_window = size
                             break
+
             #   nguong loai diem canh nhau
             if (y_pre != 0):
-                distain_peak = peak-pre_peak
+                distance_peak = peak-pre_peak
                 if (pre_window == max(self.window_size)):
-                    if distain_peak < T_thr1:
+                    if distance_peak < T_thr1:
                         y_pre = 0
                 else:
-                    if distain_peak <= T_thr2:
+                    if distance_peak <= T_thr2:
                         y_pre = 0
                 pre_peak = peak
             y_predicts.append(y_pre)
             y_window.append(pre_window)
-        # print(y_predicts)
         return y_predicts, y_window
 
 def scale_data(X_train, X_test):
@@ -399,12 +405,13 @@ def predict(path):
     #initialize StepDetection module with list of window_size
     stepDt = StepPredict(window_size=[64, 48, 32])
 
+    model_path = data_cfg.processed_data.data_30_7.model
+    scaler_path = data_cfg.processed_data.data_30_7.scaler
+
     peaks = sig.get_all_peaks()
 
-    stepDt.load_model(
-        "/home/hatran_ame/DB_PY/Flask_SQLAlchemy/data/processed_data/data_20_7/svm.model")
-    stepDt.loadScaler(
-        "/home/hatran_ame/DB_PY/Flask_SQLAlchemy/data/processed_data/data_20_7/scaler.sav")
+    stepDt.load_model(model_path)
+    stepDt.loadScaler(scaler_path)
 
     #adaptive resampling
     y, w = stepDt.process(sig)
